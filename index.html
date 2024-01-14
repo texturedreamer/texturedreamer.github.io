@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="TextureDreamer: Image-guided Texture Synthesis through Geometry-aware Diffusion">
+  <meta name="keywords" content="Texture Transfer, Texture Synthesis">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TextureDreamer: Image-guided Texture Synthesis through Geometry-aware Diffusion</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script> -->
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.ico">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <!-- Style and Script from result template -->
+  <style>
+    /* html {
+      background-color: #eee;
+      margin: 0;
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, helvetica, arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.2em;
+      font-size: 14px;
+      line-height: 18px;
+      font-weight: 300;
+      text-align: left;
+      background-color: white;
+      color: #333;
+      width: 840px;
+      margin: 0 auto;
+      padding: 18px 12px;
+      box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+      -webkit-font-smoothing: antialiased;
+    }
+    h1 {
+      text-align: center;
+      text-align: left;
+    }
+    h1 {
+      font-size: 1.5em;
+      margin-top: 2em;
+      margin-bottom: 1em;
+    }
+    h2 {
+      font-size: 1.15em;
+      margin-top: 1.5em;
+      margin-bottom: 0;
+    } */
+    h3 span:last-child {
+      float: right;
+      font-weight: bold;
+      color: #333;
+      background-color: #ddd;
+      border-radius: 0.2em;
+      padding: 0 0.3em 0 0.35em;
+      font-size: 0.8em;
+      font-family: verdana;
+    }
+    h3 a {
+      color: inherit;
+    }
+    /* p, ul {
+      margin-top: 0.6em;
+      margin-bottom: 1.1em;
+    }  */
+    /* ul {
+      padding-left: 2em;
+    }
+    a {
+      text-decoration: underline; color: black;
+    }
+    a:hover {
+      text-decoration: underline; color: gray;
+    }
+    a.invert {
+      text-decoration: none; color: white; font-weight: bold;
+    }
+    a.invert:hover {
+      text-decoration: none; color: #ccc;
+    }
+    
+    div.links {
+      text-align: center;
+      justify-content: space-around;
+      margin-top: 0.5em;
+      margin-bottom: 2.5em;
+      line-height: 2.5em;
+    }
+    div.links a {
+      text-decoration: none;
+    }
+    div.links a:hover {
+      text-decoration: none;
+    }
+    div.links span {
+      background-color: #444;
+      color: white;
+      font-weight: bold;
+      border-radius: 0.5em;
+      padding: 0.4em 1em 0.5em 1em;
+      margin: 0 0.2em;
+      white-space: nowrap;
+    }
+    div.links span:hover {
+      background-color: #777;
+    }
+    div.links img {
+      height: 1em;
+      vertical-align: -10%;
+      filter: brightness(0%) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(24deg) brightness(100%) contrast(100%);
+    }
+    
+    /* wrap long lines */
+    /* pre {
+      white-space: pre-wrap;
+      white-space: -moz-pre-wrap;
+      white-space: -o-pre-wrap;
+      word-wrap: break-word;
+      text-align: left;
+    }
+    pre {
+      border-left: 5px solid #eee;
+      padding-left: 5px;
+    } */
+    /* @media only screen and (max-device-width: 480px) {
+      html { background-color: white; }
+      body { width: 97%; box-shadow: none; }
+      body {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust:    100%;
+        -ms-text-size-adjust:     100%;
+      }
+      body { font-size: 1.25em; font-size: 2.1vw; line-height: 1.6em; line-height: 2.7vw; }
+    }
+    @media print {
+      html { background-color: white; }
+      body { width: 97%; box-shadow: none; }
+    } */
+    /*
+    button {
+      padding: 0.5em 0.75em;
+      margin: 0.4em 0.4em;
+      min-width: 18ch;
+      max-width: 18ch;
+      text-align: left;
+      background-color: #ddd;
+      color: #333;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    
+      @media screen and (-ms-high-contrast: active) {
+        border: 2px solid currentcolor;
+      }
+    }
+    
+    button.on {
+      background-color: #333;
+      color: #bbb;
+    }
+    
+    button.result {
+      padding: 0.5em 0.75em;
+      margin: 0.4em 0.4em;
+      min-width: 18ch;
+      max-width: 18ch;
+      text-align: left;
+      background-color: #ddd;
+      color: #333;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    
+      @media screen and (-ms-high-contrast: active) {
+        border: 2px solid currentcolor;
+      }
+    }
+    
+    button.result.on {
+      background-color: #333;
+      color: #bbb;
+    } */
+    
+    div.result button {
+      padding: 0.5em 0.75em;
+      margin: 0.4em 0.4em;
+      min-width: 18ch;
+      max-width: 18ch;
+      text-align: left;
+      background-color: #ddd;
+      color: #333;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    
+      @media screen and (-ms-high-contrast: active) {
+        border: 2px solid currentcolor;
+      }
+    }
+    
+    div.result button.on {
+      background-color: #333;
+      color: #bbb;
+    }
+
+    div.frame {
+      max-width: 840px;
+      /* max-width: 70%; */
+      width: 100%;
+      margin: auto;
+    }
+    
+    p.btncap {
+      margin: 0.4em 0.4em;
+      padding: 0 0.2em;
+      color: #333;
+      border-bottom: 2px solid #333;
+      font-weight: bold;
+      font-style: italic;
+      font-size: 0.8em;
+    }
+    
+    /* .center {
+      text-align: center;
+    } */
+    .flex {
+      display: flex;
+    }
+    
+    /* .desc {
+      margin: 1.5em 0.4em;
+    } */
+    /* .wider_buttons button {
+      display: block;
+      min-width: 18ch;
+      max-width: 18ch;
+    } */
+    /*
+    .horns button {
+      text-align: center;
+      display: block;
+      min-width: 27ch;
+      width: 180px;
+    } 
+    .tarot button {
+      text-align: center;
+      display: block;
+      min-width: 11ch;
+      width: 95px;
+    }*/
+    button {
+      display: block;
+    }
+    
+    video {
+      display: none;
+      width: 512px;
+      min-width: 300px;
+      /* max-width: 540px;
+      width: auto; */
+      /* height: 540px; */
+      margin: 0.4em;
+    }
+    video.on {
+      display: block;
+    }
+    /*
+    img[id^="img"] {
+      display: none;
+      max-width: 540px;
+      max-height: 540px;
+      width: auto;
+      height: auto;
+      margin: 0.4em;
+    }
+    img.shiny_img {
+      display: none;
+      width: 504px;
+      height: 284px;
+      margin: 0.4em;
+    }
+    img.on {
+      display: block;
+    }
+    
+    .teaser {
+    }
+    
+    .teaser video {
+      width: 410px;
+    }
+    
+    .teaser .crop {
+      overflow: hidden;
+      height: 307px;
+    }
+    
+    .teaser .horns video {
+      height: 307px;
+      margin-top: 0px;
+    }
+    
+    .teaser .tarot video {
+      height: 410px;
+      margin-top: -65px;
+    }
+    
+    .closeup {
+      width: 100px;
+    }
+    
+    .closeup img {
+      width: 100%;
+    }
+    
+    .closeup div {
+      width: 100%;
+      font-size: 1em;
+      font-weight: 400;
+      text-align: center;
+    }
+    
+    .closeup em {
+      font-weight: 600;
+      font-style: normal;
+    } */
+    
+    
+    div.imgcontainer {
+      display: none;
+      width: 540px;
+      height: 540px;
+      margin: 0.4em;
+    }
+    div.on {
+      display: block;
+    }
+    
+    div.imgcontainer img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+   
+    
+    /* .authors {
+      display: flex;
+      justify-content: space-evenly;
+      text-align: center;
+    }
+    
+    .authors div {
+      width: 25ch;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    } */
+    /* 
+    .authors div p:first-child {
+      font-size: 1.1em;
+      margin-bottom: 0.5em;
+    }
+    
+    .authors div p:last-child {
+      margin-top: 0.5em;
+      font-size: 0.95em;
+    }
+    
+    .justify {
+      text-align: justify;
+    }
+    
+    .shadow {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+    
+    em {
+      font-weight: bold;
+    }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      cursor: pointer;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 120px;
+      background-color: black;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 150%;
+      left: 50%;
+      margin-left: -60px;
+    }
+    
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: black transparent transparent transparent;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+    } */
+    
+  </style>
+    <script>
+    class ImageHandler {
+      constructor(n_datasets, n_images, databtn_id, imgbtn_id, imgtag_id) {
+        this.n_datasets = n_datasets;
+        this.n_images = n_images;
+    
+        this.databtn_id = databtn_id;
+        this.imgbtn_id = imgbtn_id;
+        this.imgtag_id = imgtag_id;
+      }
+    
+      select_image(j) {
+        for (let i = 0; i < this.n_images; i++) {
+          let v = document.getElementById(this.imgtag_id + i.toString());
+          let b = document.getElementById(this.imgbtn_id + i.toString());
+          if (i == j) {
+            b.className = "on";
+            v.style.display = "block";
+          } else {
+            b.className = "";
+            v.style.display = "none";
+          }
+        }
+      };
+    
+     select_dataset(j) {
+        let dataset_name = document.getElementById(this.databtn_id + j.toString()).value;
+        for (let i = 0; i < this.n_datasets; i++) {
+          document.getElementById(this.databtn_id + i.toString()).className = (i == j ? "on" : "");
+        }
+        for (let i = 0; i < this.n_images; i++) {
+          let image_name = document.getElementById(this.imgbtn_id + i.toString()).value;
+          let v = document.getElementById(this.imgtag_id + i.toString());
+          v.src = "images/" + dataset_name + "_" + image_name + ".png";
+        }
+      };
+    
+      register() {
+        for (let i = 0; i < this.n_datasets; i++) {
+          document.getElementById(this.databtn_id + i.toString()).addEventListener("click", function() { this.select_dataset(i); }.bind(this, i));
+        }
+    
+        for (let i = 0; i < this.n_images; i++) {
+          document.getElementById(this.imgbtn_id + i.toString()).addEventListener("click", function() { this.select_image(i); }.bind(this, i));
+        }
+    
+        //this.select_image(0);
+      }
+    }
+    
+    class VideoHandler {
+      constructor(n_datasets, n_videos, databtn_id, vidbtn_id, vidtag_id) {
+        this.n_datasets = n_datasets;
+        this.n_videos = n_videos;
+    
+        this.databtn_id = databtn_id;
+        this.vidbtn_id = vidbtn_id;
+        this.vidtag_id = vidtag_id;
+      }
+    
+      get paused() {
+        return document.getElementById(this.vidtag_id + "0").paused;
+      }
+    
+      sync_video(e) {
+        if (e === undefined) {
+          return;
+        }
+        for (let i = 0; i < this.n_videos; i++) {
+          let v = document.getElementById(this.vidtag_id + i.toString());
+          if (v != e.currentTarget) {
+            v.currentTime = e.currentTarget.currentTime;
+          }
+        }
+      };
+    
+      play_video(e) {
+        this.sync_video(e);
+        for (let i = 0; i < this.n_videos; i++) {
+          document.getElementById(this.vidtag_id + i.toString()).play();
+        }
+      };
+    
+      pause_video(e) {
+        for (let i = 0; i < this.n_videos; i++) {
+          document.getElementById(this.vidtag_id + i.toString()).pause();
+        }
+        this.sync_video(e);
+      };
+    
+      select_video(j) {
+        for (let i = 0; i < this.n_videos; i++) {
+          let v = document.getElementById(this.vidtag_id + i.toString());
+          let b = document.getElementById(this.vidbtn_id + i.toString());
+          if (i == j) {
+            b.className = "on";
+            v.style.display = "block";
+            v.addEventListener("play", this);
+            v.addEventListener("pause", this);
+            v.addEventListener("seeking", this);
+            v.addEventListener("seeked", this);
+            v.addEventListener("playing", this);
+          } else {
+            b.className = "";
+            v.style.display = "none";
+            v.removeEventListener("play", this);
+            v.removeEventListener("pause", this);
+            v.removeEventListener("seeking", this);
+            v.removeEventListener("seeked", this);
+            v.removeEventListener("playing", this);
+          }
+        }
+      };
+    
+      handleEvent(e) {
+        switch (e.type) {
+          case "play": this.play_video(e); break;
+          case "pause": this.pause_video(e); break;
+          case "seeking": this.sync_video(e); break;
+          case "seeked": this.sync_video(e); break;
+          case "playing": this.sync_video(e); break;
+        }
+      }
+    
+      select_dataset(j) {
+        let autoplay = !this.paused;
+        let dataset_name = document.getElementById(this.databtn_id + j.toString()).value;
+        for (let i = 0; i < this.n_datasets; i++) {
+          document.getElementById(this.databtn_id + i.toString()).className = (i == j ? "on" : "");
+        }
+        for (let i = 0; i < this.n_videos; i++) {
+          let video_name = document.getElementById(this.vidbtn_id + i.toString()).value;
+          let v = document.getElementById(this.vidtag_id + i.toString());
+          v.src = "videos/" + dataset_name + "_" + video_name + ".mp4";
+        }
+        if (autoplay) {
+          this.play_video();
+        }
+      };
+    
+      register() {
+        for (let i = 0; i < this.n_datasets; i++) {
+          document.getElementById(this.databtn_id + i.toString()).addEventListener("click", function() { this.select_dataset(i); }.bind(this, i));
+        }
+    
+        for (let i = 0; i < this.n_videos; i++) {
+          document.getElementById(this.vidbtn_id + i.toString()).addEventListener("click", function() { this.select_video(i); }.bind(this, i));
+        }
+    
+        for (let i = 0; i < this.n_videos; i++) {
+          document.getElementById(this.vidtag_id + i.toString()).muted = true;
+        }
+    
+        //this.select_video(0);
+      }
+    }
+    
+    window.onload = function() {
+      vidcmp_cross_handler = new VideoHandler(3, 7, "vidcmp_cross_data", "vidcmp_cross_btn", "vidcmp_cross_vid");
+      vidcmp_cross_handler.register();
+      try {
+        vidcmp_cross_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_chair_handler = new VideoHandler(2, 7, "vidcmp_chair_data", "vidcmp_chair_btn", "vidcmp_chair_vid");
+      vidcmp_chair_handler.register();
+      try {
+        vidcmp_chair_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_plush_handler = new VideoHandler(2, 7, "vidcmp_plush_data", "vidcmp_plush_btn", "vidcmp_plush_vid");
+      vidcmp_plush_handler.register();
+      try {
+        vidcmp_plush_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_bed_handler = new VideoHandler(2, 7, "vidcmp_bed_data", "vidcmp_bed_btn", "vidcmp_bed_vid");
+      vidcmp_bed_handler.register();
+      try {
+        vidcmp_bed_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_mug_handler = new VideoHandler(2, 7, "vidcmp_mug_data", "vidcmp_mug_btn", "vidcmp_mug_vid");
+      vidcmp_mug_handler.register();
+      try {
+        vidcmp_mug_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_relit_handler = new VideoHandler(1, 4, "vidcmp_relit_data", "vidcmp_relit_btn", "vidcmp_relit_vid");
+      vidcmp_relit_handler.register();
+      try {
+        vidcmp_relit_handler.play_video();
+      } catch (e) {
+      }
+    
+      vidcmp_ablation_handler = new VideoHandler(1, 10, "vidcmp_ablation_data", "vidcmp_ablation_btn", "vidcmp_ablation_vid");
+      vidcmp_ablation_handler.register();
+      try {
+        vidcmp_ablation_handler.play_video();
+      } catch (e) {
+      }
+    
+    };
+    </script>
+</head>
+<body>
+
+<!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://hypernerf.github.io">
+            HyperNeRF
+          </a>
+          <a class="navbar-item" href="https://nerfies.github.io">
+            Nerfies
+          </a>
+          <a class="navbar-item" href="https://latentfusion.github.io">
+            LatentFusion
+          </a>
+          <a class="navbar-item" href="https://photoshape.github.io">
+            PhotoShape
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav> -->
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">TextureDreamer: Image-guided Texture Synthesis through Geometry-aware Diffusion</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://yuyingyeh.github.io">Yu-Ying Yeh</a><sup>1,3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://jbhuang0604.github.io">Jia-Bin Huang</a><sup>2,3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://changilkim.com">Changil Kim</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://leixiao-ubc.github.io">Lei Xiao</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://www.monkeyoverflow.com/about">Thu Nguyen-Phuoc</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://nkhan2.github.io">Numair Khan</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://holmes969.github.io">Cheng Zhang</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://cseweb.ucsd.edu/~mkchandraker/">Manmohan Chandraker</a><sup>1</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://scholar.google.com/citations?view_op=list_works&hl=en&hl=en&user=xWD7ZRkAAAAJ&sortby=pubdate">Carl S Marshall</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="http://flycooler.com">Zhao Dong</a><sup>3</sup>&nbsp</span>
+            <span class="author-block">
+              <a target="_blank" rel="noopener noreferrer" href="https://scholar.google.com/citations?hl=zh-CN&user=Nxc2RbQAAAAJ&view_op=list_works&sortby=pubdate">Zhengqin Li</a><sup>3</sup>&nbsp</span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>University of California, San Diego</span>&nbsp
+            <span class="author-block"><sup>2</sup>University of Maryland, College Park</span>&nbsp
+            <span class="author-block"><sup>3</sup>Meta</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Video Link. -->
+              <!-- <span class="link-block">
+                <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </a>
+              </span> -->
+              <!-- Code Link. -->
+              <!-- <span class="link-block">
+                <a href="https://github.com/google/nerfies"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span> -->
+              <!-- Result Link. -->
+              <span class="link-block">
+                <a href="./static/results/index.html"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>More Results</span>
+                  </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <!-- <video id="teaser" autoplay muted loop playsinline height="100%">
+        <source src="./static/videos/teaser.mp4"
+                type="video/mp4">
+      </video> -->
+      <img src="./static/images/teaser.jpg">
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf">TextureDreamer</span> transfers photorealistic, high-fidelity, 
+        and geometry-aware textures from 3-5 images to arbitrary 3D meshes. 
+      </h2>
+    </div>
+  </div>
+</section>
+
+
+<!-- <section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-steve">
+          <video poster="" id="steve" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/steve.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp">
+          <video poster="" id="chair-tp" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/chair-tp.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-shiba">
+          <video poster="" id="shiba" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/shiba.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-fullbody">
+          <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/fullbody.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-blueshirt">
+          <video poster="" id="blueshirt" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/blueshirt.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-mask">
+          <video poster="" id="mask" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/mask.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-coffee">
+          <video poster="" id="coffee" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/coffee.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-toby">
+          <video poster="" id="toby" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/toby2.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            We present TextureDreamer, a novel image-guided texture synthesis method to transfer 
+            relightable textures from a small number of input images (3 to 5) to target 3D shapes 
+            across arbitrary categories. 
+          </p>
+          <p>
+            Texture creation is a pivotal challenge in vision and 
+            graphics. Industrial companies hire experienced artists to manually craft textures 
+            for 3D assets. Classical methods require densely sampled views and accurately aligned 
+            geometry, while learning-based methods are confined to category-specific shapes within 
+            the dataset. In contrast, TextureDreamer can transfer highly detailed, intricate 
+            textures from real-world environments to arbitrary objects with only a few casually 
+            captured images, potentially significantly democratizing texture creation. 
+          </p>
+          <p>
+            Our core idea, <i>personalized geometry-aware score distillation (PGSD)</i>, draws 
+            inspiration from recent advancements in diffuse models, including 
+            personalized modeling for texture information extraction, variational score 
+            distillation for detailed appearance synthesis, and explicit geometry guidance with 
+            ControlNet. Our integration and several essential modifications substantially improve 
+            the texture quality. Experiments on real images spanning different categories show 
+            that <span class="dnerf">TextureDreamer</span> can successfully transfer highly 
+            realistic, semantic meaningful 
+            texture to arbitrary objects, surpassing the visual quality of previous 
+            state-of-the-art.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+    <!-- Paper video. -->
+    <!-- <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src=""
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div> -->
+    <!--/ Paper video. -->
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Method</h2>
+        <img src="./static/images/method.jpg">
+        <p>
+            Given 3-5 images, we first obtain personalized diffusion model 
+            with <a href="https://dreambooth.github.io">Dreambooth</a> 
+            finetuning. The spatially-varying bidirectional reflectance 
+            distribution (BRDF) field is then optimized through personalized 
+            geometric-aware score distillation (PGSD). After optimization 
+            finished, high-resolution texture maps corresponding to albedo, 
+            metallic, and roughness can be extracted from the optimized BRDF 
+            field.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <!-- Interactive -->
+        <h2 id="results" class="title is-3">
+          Results
+        </h2>
+        <!-- <div class="result">
+          <button>Cross-category</button>
+        </div> -->
+        
+        <span class="link-block">
+          <a href="#vidcmp_sofa"
+             class="external-link button is-normal is-rounded is-light">
+            <span>Sofa</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_plush"
+             class="external-link button is-normal is-rounded is-light">
+            <span>Plush</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_mug"
+             class="external-link button is-normal is-rounded is-light">
+            <span>Mug</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_bed"
+             class="external-link button is-normal is-rounded is-light">
+            <span>Bed</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_cross"
+             class="external-link button is-normal is-rounded is-primary is-light">
+            <span>Cross-category</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_relit"
+             class="external-link button is-normal is-rounded is-info is-light">
+            <span>Relighting</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_ablation"
+             class="external-link button is-normal is-rounded is-danger is-light">
+            <span>Ablation</span>
+            </a>
+        </span>
+        <span class="link-block">
+          <a href="#vidcmp_diversity"
+             class="external-link button is-normal is-rounded is-warning is-light">
+            <span>Diversity</span>
+            </a>
+        </span>
+
+        
+        <br/><br/>
+        <h3 id="vidcmp_sofa" class="title is-4">
+          Comparisons with baselines: Sofa
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <p>
+          We compare our method with 
+          <a target="_blank" rel="noopener noreferrer" href="https://github.com/eladrich/latent-nerf?tab=readme-ov-file#latent-paint-art">Latent-Paint</a> 
+          and <a target="_blank" rel="noopener noreferrer" href="https://github.com/TEXTurePaper/TEXTurePaper?tab=readme-ov-file#3-run-texture-with-personalized-model">TEXTURE</a>.
+        </p>
+        <div class="column frame">
+          <div class="content has-text-justified">
+            <div class="flex">
+              <div>
+                <div class="flex">
+                  <div class="result">
+                    <p class="btncap">Input Style</p>
+                    <button id="vidcmp_chair_data0" value="mmmm_chair1" class="on">Black Chair with Flowers</button>
+                    <button id="vidcmp_chair_data1" value="mmmm_chair9">Red Plaid Chair with a Pillow</button>
+                    <!-- <button id="vidcmp_chair_data2" value="mmmm_chair2">Striped Sofa with Green Cushion</button> -->
+                    <!-- <button id="vidcmp_chair_data3" value="mmmm_chair6">Green Chair with a Floral Pillow</button> -->
+                  </div>
+                  <div class="wider_buttons result">
+                    <p class="btncap">Input Images</p>
+                    <button id="vidcmp_chair_btn0" value="imgs_input">Images</button>
+                    <p class="btncap">Mesh: Armchair</p>
+                    <button id="vidcmp_chair_btn1" value="sofa_0_ours" class="on">Ours</button>
+                    <button id="vidcmp_chair_btn2" value="sofa_0_texture">TEXTure</button>
+                    <button id="vidcmp_chair_btn3" value="sofa_0_latentpaint">LatentPaint</button>
+                    <!-- <p class="btncap">Mesh: Loveseat Sofa</p>
+                    <button id="vidcmp_chair_btn4" value="sofa_1_ours">Ours</button>
+                    <button id="vidcmp_chair_btn5" value="sofa_1_texture">TEXTure</button>
+                    <button id="vidcmp_chair_btn6" value="sofa_1_latentpaint">LatentPaint</button> -->
+                    <p class="btncap">Mesh: Three-seat Sofa</p>
+                    <button id="vidcmp_chair_btn4" value="sofa_2_ours">Ours</button>
+                    <button id="vidcmp_chair_btn5" value="sofa_2_texture">TEXTure</button>
+                    <button id="vidcmp_chair_btn6" value="sofa_2_latentpaint">LatentPaint</button>
+                  </div>
+                </div>
+                <!-- <div class="desc">
+                  <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                  <p><b>Meshes.</b> We demonstrate image-guided texture transfer to diverse meshes from selected input images.</p>
+                  <p><b>Baselines.</b> We compare our method with existing methods TEXTure [<a href="#reference">1</a>] and LatentPaint[<a href="#reference">2</a>], which can also synthesize textures for meshes given a few input images.</p>
+                </div> -->
+              </div>
+              <div>
+                <video id="vidcmp_chair_vid0" controls loop>
+                  <source src="videos/mmmm_chair1_imgs_input.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid1" controls loop class="on">
+                  <source src="videos/mmmm_chair1_sofa_0_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid2" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_0_texture.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid3" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_0_latentpaint.mp4" type="video/mp4"/>
+                </video>
+                <!-- <video id="vidcmp_chair_vid4" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_1_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid5" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_1_texture.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid6" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_1_latentpaint.mp4" type="video/mp4"/>
+                </video> -->
+                <video id="vidcmp_chair_vid4" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_2_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid5" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_2_texture.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_chair_vid6" controls loop>
+                  <source src="videos/mmmm_chair1_sofa_2_latentpaint.mp4" type="video/mp4"/>
+                </video>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_plush" class="title is-4">
+          Comparisons with baselines: Plush
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <p>
+          We compare our method with 
+          <a target="_blank" rel="noopener noreferrer" href="https://github.com/eladrich/latent-nerf?tab=readme-ov-file#latent-paint-art">Latent-Paint</a> 
+          and <a target="_blank" rel="noopener noreferrer" href="https://github.com/TEXTurePaper/TEXTurePaper?tab=readme-ov-file#3-run-texture-with-personalized-model">TEXTURE</a>.
+        </p>
+        <div class="column frame">
+          <div class="flex">
+            <div>
+              <div class="flex">
+                <div class="result">
+                  <p class="btncap">Input Style</p>
+                  <button id="vidcmp_plush_data0" value="plush_cat0" class="on">Cat</button>
+                  <button id="vidcmp_plush_data1" value="plush_tokage">Tokage</button>
+                  <!-- <button id="vidcmp_plush_data2" value="plush_bear1">Bear</button> -->
+                  <!-- <button id="vidcmp_plush_data3" value="plush_tonkatsu">Tonkatsu</button> -->
+                </div>
+                <div class="wider_buttons result">
+                  <p class="btncap">Input Images</p>
+                  <button id="vidcmp_plush_btn0" value="imgs_input">Images</button>
+                  <p class="btncap">Mesh: Pikachu</p>
+                  <button id="vidcmp_plush_btn1" value="Pikachu_ours" class="on">Ours</button>
+                  <button id="vidcmp_plush_btn2" value="Pikachu_texture">TEXTure</button>
+                  <button id="vidcmp_plush_btn3" value="Pikachu_latentpaint">LatentPaint</button>
+                  <!-- <p class="btncap">Mesh: Bear</p>
+                  <button id="vidcmp_plush_btn4" value="bear_ours">Ours</button>
+                  <button id="vidcmp_plush_btn5" value="bear_texture">TEXTure</button>
+                  <button id="vidcmp_plush_btn6" value="bear_latentpaint">LatentPaint</button> -->
+                  <p class="btncap">Mesh: Orangutan</p>
+                  <button id="vidcmp_plush_btn4" value="orangutan_ours">Ours</button>
+                  <button id="vidcmp_plush_btn5" value="orangutan_texture">TEXTure</button>
+                  <button id="vidcmp_plush_btn6" value="orangutan_latentpaint">LatentPaint</button>
+                </div>
+              </div>
+              <!-- <div class="desc">
+                <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                <p><b>Meshes.</b> We demonstrate image-guided texture transfer to diverse meshes from selected input images.</p>
+                <p><b>Baselines.</b> We compare our method with existing methods TEXTure [<a href="#reference">1</a>] and LatentPaint[<a href="#reference">2</a>], which can also synthesize textures for meshes given a few input images.</p>
+              </div> -->
+            </div>
+            <div>
+              <video id="vidcmp_plush_vid0" controls loop>
+                <source src="videos/plush_cat0_imgs_input.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid1" controls loop class="on">
+                <source src="videos/plush_cat0_Pikachu_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid2" controls loop>
+                <source src="videos/plush_cat0_Pikachu_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid3" controls loop>
+                <source src="videos/plush_cat0_Pikachu_latentpaint.mp4" type="video/mp4"/>
+              </video>
+              <!-- <video id="vidcmp_plush_vid4" controls loop>
+                <source src="videos/plush_cat0_bear_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid5" controls loop>
+                <source src="videos/plush_cat0_bear_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid6" controls loop>
+                <source src="videos/plush_cat0_bear_latentpaint.mp4" type="video/mp4"/>
+              </video> -->
+              <video id="vidcmp_plush_vid4" controls loop>
+                <source src="videos/plush_cat0_orangutan_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid5" controls loop>
+                <source src="videos/plush_cat0_orangutan_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_plush_vid6" controls loop>
+                <source src="videos/plush_cat0_orangutan_latentpaint.mp4" type="video/mp4"/>
+              </video>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_mug" class="title is-4">
+          Comparisons with baselines: Mug
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <p>
+          We compare our method with 
+          <a target="_blank" rel="noopener noreferrer" href="https://github.com/eladrich/latent-nerf?tab=readme-ov-file#latent-paint-art">Latent-Paint</a> 
+          and <a target="_blank" rel="noopener noreferrer" href="https://github.com/TEXTurePaper/TEXTurePaper?tab=readme-ov-file#3-run-texture-with-personalized-model">TEXTURE</a>.
+        </p>
+        <div class="column frame">
+          <div class="flex">
+            <div>
+              <div class="flex">
+                <div class="result">
+                  <p class="btncap">Input Style</p>
+                  <!-- <button id="vidcmp_mug_data0" value="plate_zzz" class="on">Plate</button> -->
+                  <!-- <button id="vidcmp_mug_data0" value="mug_zzz2">Yellow Mug</button> -->
+                  <button id="vidcmp_mug_data0" value="bowl_ikea0">Bowl</button>
+                  <button id="vidcmp_mug_data1" value="mug_bear0" class="on">Bear Mug</button>
+                </div>
+                <div class="wider_buttons result">
+                  <p class="btncap">Input Images</p>
+                  <button id="vidcmp_mug_btn0" value="imgs_input">Images</button>
+                  <p class="btncap">Mesh: Cup with plate</p>
+                  <button id="vidcmp_mug_btn1" value="cup_with_plate_ours" class="on">Ours</button>
+                  <button id="vidcmp_mug_btn2" value="cup_with_plate_texture">TEXTure</button>
+                  <button id="vidcmp_mug_btn3" value="cup_with_plate_latentpaint">LatentPaint</button>
+                  <!-- <p class="btncap">Mesh: Klein bottle</p>
+                  <button id="vidcmp_mug_btn4" value="klein-bottle_ours">Ours</button>
+                  <button id="vidcmp_mug_btn5" value="klein-bottle_texture">TEXTure</button>
+                  <button id="vidcmp_mug_btn6" value="klein-bottle_latentpaint">LatentPaint</button> -->
+                  <p class="btncap">Mesh: Teapot</p>
+                  <button id="vidcmp_mug_btn4" value="teapot_ours">Ours</button>
+                  <button id="vidcmp_mug_btn5" value="teapot_texture">TEXTure</button>
+                  <button id="vidcmp_mug_btn6" value="teapot_latentpaint">LatentPaint</button>
+                </div>
+              </div>
+              <!-- <div class="desc">
+                <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                <p><b>Meshes.</b> We demonstrate image-guided texture transfer to diverse meshes from selected input images.</p>
+                <p><b>Baselines.</b> We compare our method with existing methods TEXTure [<a href="#reference">1</a>] and LatentPaint[<a href="#reference">2</a>], which can also synthesize textures for meshes given a few input images.</p>
+              </div> -->
+            </div>
+            <div>
+              <video id="vidcmp_mug_vid0" controls loop>
+                <source src="videos/mug_bear0_imgs_input.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid1" controls loop class="on">
+                <source src="videos/mug_bear0_cup_with_plate_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid2" controls loop>
+                <source src="videos/mug_bear0_cup_with_plate_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid3" controls loop>
+                <source src="videos/mug_bear0_cup_with_plate_latentpaint.mp4" type="video/mp4"/>
+              </video>
+              <!-- <video id="vidcmp_mug_vid4" controls loop>
+                <source src="videos/mug_bear0_klein-bottle_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid5" controls loop>
+                <source src="videos/mug_bear0_klein-bottle_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid6" controls loop>
+                <source src="videos/mug_bear0_klein-bottle_latentpaint.mp4" type="video/mp4"/>
+              </video> -->
+              <video id="vidcmp_mug_vid4" controls loop>
+                <source src="videos/mug_bear0_teapot_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid5" controls loop>
+                <source src="videos/mug_bear0_teapot_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_mug_vid6" controls loop>
+                <source src="videos/mug_bear0_teapot_latentpaint.mp4" type="video/mp4"/>
+              </video>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_bed" class="title is-4">
+          Comparisons with baselines: Bed
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <p>
+          We compare our method with 
+          <a target="_blank" rel="noopener noreferrer" href="https://github.com/eladrich/latent-nerf?tab=readme-ov-file#latent-paint-art">Latent-Paint</a> 
+          and <a target="_blank" rel="noopener noreferrer" href="https://github.com/TEXTurePaper/TEXTurePaper?tab=readme-ov-file#3-run-texture-with-personalized-model">TEXTURE</a>.
+        </p>
+        <div class="column frame">
+          <div class="flex">
+            <div>
+              <div class="flex">
+                <div class="result">
+                  <p class="btncap">Input Style</p>
+                  <button id="vidcmp_bed_data0" value="ikea_bed14" class="on">Black Floral Bed with a Yellow Pillow</button>
+                  <button id="vidcmp_bed_data1" value="ikea_bed13">Bed with Pink and Black Strips</button>
+                </div>
+                <div class="wider_buttons result">
+                  <p class="btncap">Input Images</p>
+                  <button id="vidcmp_bed_btn0" value="imgs_input">Images</button>
+                  <p class="btncap">Mesh: Double Bed</p>
+                  <button id="vidcmp_bed_btn1" value="bed_0_ours" class="on">Ours</button>
+                  <button id="vidcmp_bed_btn2" value="bed_0_texture">TEXTure</button>
+                  <button id="vidcmp_bed_btn3" value="bed_0_latentpaint">LatentPaint</button>
+                  <p class="btncap">Mesh: King-size Bed</p>
+                  <button id="vidcmp_bed_btn4" value="bed_3_ours">Ours</button>
+                  <button id="vidcmp_bed_btn5" value="bed_3_texture">TEXTure</button>
+                  <button id="vidcmp_bed_btn6" value="bed_3_latentpaint">LatentPaint</button>
+                </div>
+              </div>
+              <!-- <div class="desc">
+                <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                <p><b>Meshes.</b> We demonstrate image-guided texture transfer to diverse meshes from selected input images.</p>
+                <p><b>Baselines.</b> We compare our method with existing methods TEXTure [<a href="#reference">1</a>] and LatentPaint[<a href="#reference">2</a>], which can also synthesize textures for meshes given a few input images.</p>
+              </div> -->
+            </div>
+            <div>
+              <video id="vidcmp_bed_vid0" controls loop>
+                <source src="videos/ikea_bed14_imgs_input.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid1" controls loop class="on">
+                <source src="videos/ikea_bed14_bed_0_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid2" controls loop>
+                <source src="videos/ikea_bed14_bed_0_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid3" controls loop>
+                <source src="videos/ikea_bed14_bed_0_latentpaint.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid4" controls loop>
+                <source src="videos/ikea_bed14_bed_3_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid5" controls loop>
+                <source src="videos/ikea_bed14_bed_3_texture.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_bed_vid6" controls loop>
+                <source src="videos/ikea_bed14_bed_3_latentpaint.mp4" type="video/mp4"/>
+              </video>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_cross" class="title is-4">
+          Cross-category texture transfer
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <!-- <div class="column is-three-quarters-tablet"> -->
+        <div class="column frame">
+          <div class="content has-text-justified">
+            <div class="flex">
+              <div>
+                <div class="flex">
+                  <div class="result">
+                    <p class="btncap">Input Style</p>
+                    <button id="vidcmp_cross_data0" value="plush_bear0" class="on">Brown Bear with a Pink Head Cloak</button>
+                    <button id="vidcmp_cross_data1" value="mmmm_chair9">Red Plaid Chair with a Pillow</button>
+                    <button id="vidcmp_cross_data2" value="mug_zzz4">White Mug with Colorful Shapes</button>
+                  </div>
+                  <div class="wider_buttons result">
+                    <p class="btncap">Input Images</p>
+                    <button id="vidcmp_cross_btn0" value="imgs_input">Images</button>
+                    <p class="btncap">Meshes</p>
+                    <button id="vidcmp_cross_btn1" value="sofa_0_ours" class="on">Armchair</button>
+                    <!-- <button id="vidcmp_cross_btn2" value="sofa_1_ours">Loveseat Sofa</button> -->
+                    <button id="vidcmp_cross_btn2" value="sofa_2_ours">Three-seat Sofa</button>
+                    <button id="vidcmp_cross_btn3" value="bed_0_ours">Double Bed</button>
+                    <button id="vidcmp_cross_btn4" value="bed_1_ours">Single Bed</button>
+                    <button id="vidcmp_cross_btn5" value="Pikachu_ours">Pikachu</button>
+                    <!-- <button id="vidcmp_cross_btn6" value="bear_ours">Bear</button> -->
+                    <button id="vidcmp_cross_btn6" value="cup_with_plate_ours">Cup with Plate</button>
+                    <!-- <button id="vidcmp_cross_btn9" value="teapot_ours">Teapot</button> -->
+                  </div>
+                </div>
+                <!-- <div class="desc">
+                  <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                  <p><b>Meshes.</b> We demonstrate image-guided texture transfer to diverse meshes from selected input images.</p>
+                </div> -->
+              </div>
+              <div>
+                <video id="vidcmp_cross_vid0" controls loop>
+                  <source src="videos/plush_bear0_imgs_input.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_cross_vid1" controls loop class="on">
+                  <source src="videos/plush_bear0_sofa_0_ours.mp4" type="video/mp4"/>
+                </video>
+                <!-- <video id="vidcmp_cross_vid2" controls loop>
+                  <source src="videos/plush_bear0_sofa_1_ours.mp4" type="video/mp4"/>
+                </video> -->
+                <video id="vidcmp_cross_vid2" controls loop>
+                  <source src="videos/plush_bear0_sofa_2_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_cross_vid3" controls loop>
+                  <source src="videos/plush_bear0_bed_0_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_cross_vid4" controls loop>
+                  <source src="videos/plush_bear0_bed_1_ours.mp4" type="video/mp4"/>
+                </video>
+                <video id="vidcmp_cross_vid5" controls loop>
+                  <source src="videos/plush_bear0_Pikachu_ours.mp4" type="video/mp4"/>
+                </video>
+                <!-- <video id="vidcmp_cross_vid6" controls loop>
+                  <source src="videos/plush_bear0_bear_ours.mp4" type="video/mp4"/>
+                </video> -->
+                <video id="vidcmp_cross_vid6" controls loop>
+                  <source src="videos/plush_bear0_cup_with_plate_ours.mp4" type="video/mp4"/>
+                </video>
+                <!-- <video id="vidcmp_cross_vid9" controls loop>
+                  <source src="videos/plush_bear0_teapot_ours.mp4" type="video/mp4"/>
+                </video> -->
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_relit" class="title is-4">
+          Relighting of texture
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <div class="column frame">
+          <div class="flex">
+            <div>
+              <div class="flex">
+                <div class="result">
+                  <p class="btncap">Input Style</p>
+                  <button id="vidcmp_relit_data0" value="plush_bear1" class="on">Bear</button>
+                </div>
+                <div class="wider_buttons result">
+                  <p class="btncap">Input Images</p>
+                  <button id="vidcmp_relit_btn0" value="imgs_input">Images</button>
+                  <p class="btncap">Mesh: Bear</p>
+                  <button id="vidcmp_relit_btn1" value="bear_ours">Light 0</button>
+                  <button id="vidcmp_relit_btn2" value="bear_light1" class="on">Light 1</button>
+                  <button id="vidcmp_relit_btn3" value="bear_light2">Light 2</button>
+                </div>
+              </div>
+              <!-- <div class="desc">
+                <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                <p><b>Relighting.</b> Our synthesized texture contains albedo, metallic, and roughness maps, which can be used to render new appearances under different HDR environment maps.</p>
+              </div> -->
+            </div>
+            <div>
+              <video id="vidcmp_relit_vid0" controls loop>
+                <source src="videos/plush_bear1_imgs_input.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_relit_vid1" controls loop>
+                <source src="videos/plush_bear1_bear_ours.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_relit_vid2" controls loop class="on">
+                <source src="videos/plush_bear1_bear_light1.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_relit_vid3" controls loop>
+                <source src="videos/plush_bear1_bear_light2.mp4" type="video/mp4"/>
+              </video>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_ablation" class="title is-4">
+          Ablation study
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <div class="column frame">
+          <div class="flex">
+            <div>
+              <div class="flex">
+                <div class="result">
+                  <p class="btncap">Input Style</p>
+                  <button id="vidcmp_ablation_data0" value="mmmm_chair7" class="on">Green Armchair with Gray Back</button>
+                </div>
+                <div class="wider_buttons result">
+                  <p class="btncap">Input Images</p>
+                  <button id="vidcmp_ablation_btn0" value="imgs_input">Images</button>
+                  <p class="btncap">Mesh: Armchair</p>
+                  <button id="vidcmp_ablation_btn1" value="sofa_0_no_control">w/o ControlNet</button>
+                  <button id="vidcmp_ablation_btn2" value="sofa_0_depth_control">w/ ControlNet (Depth)</button>
+                  <button id="vidcmp_ablation_btn3" value="sofa_0_sds0">SDS, w/o CFG</button>
+                  <button id="vidcmp_ablation_btn4" value="sofa_0_sds">SDS, CFG 100</button>
+                  <button id="vidcmp_ablation_btn5" value="sofa_0_no_lora_rm">w/o LoRA removed</button>
+                  <button id="vidcmp_ablation_btn6" value="sofa_0_phi">Personalized model as &#x3C6;</button>
+                  <button id="vidcmp_ablation_btn7" value="sofa_0_cfg">Ours, CFG 7.5</button>
+                  <button id="vidcmp_ablation_btn8" value="sofa_0_no_camemb">w/o camera encoder &rho; updated</button>
+                  <button id="vidcmp_ablation_btn9" value="sofa_0_ours" class="on">Ours</button>
+                </div>
+              </div>
+              <!-- <div class="desc">
+                <p><b>Input Style and Input Images.</b> Select an input style, the input images are used to transfer texture to the target mesh.</p>
+                <p><b>Ablation Study.</b> Without ControlNet or with depth-based ControlNet, the results suffer from texture-geometry misalignment. Using SDS loss leads to saturated or blurry textures. Without the LoRA module removed, the results tend to remove the existing texture from the personalized diffusion model. If we replace generic diffusion model &phi; with the personalized diffusion model &psi; or apply classifier free guidance weight 7.5, the result tends to introduce random patterns which does not exist in the input images. If we choose to freeze the camera encoder weights &rho;, the result becomes worse or more noisy than our full method. Our full method with ControlNet conditioned on normal maps can synthesize accurate texture which is similar to input appearances.</p>
+              </div> -->
+            </div>
+            <div>
+              <video id="vidcmp_ablation_vid0" controls loop>
+                <source src="videos/mmmm_chair7_imgs_input.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid1" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_no_control.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid2" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_depth_control.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid3" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_sds0.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid4" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_sds.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid5" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_no_lora_rm.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid6" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_phi.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid7" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_cfg.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid8" controls loop>
+                <source src="videos/mmmm_chair7_sofa_0_no_camemb.mp4" type="video/mp4"/>
+              </video>
+              <video id="vidcmp_ablation_vid9" controls loop class="on">
+                <source src="videos/mmmm_chair7_sofa_0_ours.mp4" type="video/mp4"/>
+              </video>
+            </div>
+          </div>
+
+        </div>
+
+        <br/><br/>
+        <h3 id="vidcmp_diversity" class="title is-4">
+          Diversity of texture
+          <span><a href="#results">&uarr;</a></span>
+        </h3>
+        <div class="column frame">
+          <div class="content has-text-justified">
+            <p>
+              Our method can synthesize diverse patterns from the same set of images.
+            </p>
+          </div>
+          <div class="content has-text-centered">
+            <img src="./static/images/diversity.jpg">
+          </div>
+        </div>
+        
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Animation. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <!-- <h2 class="title is-3">Results</h2>
+        <p>
+            Additional results can be 
+            found <a target="_blank" rel="noopener noreferrer" href="./static/results/index.html">here</a>.
+        </p>
+        <br/>
+        <h3 class="title is-4">Image-guided texture synthesis</h3>
+        <div class="content has-text-justified">
+          <p>
+            Given 3-5 images of an object, we synthesize textures for an 
+            arbitrary mesh w.r.t. input images. 
+          </p>
+        </div>
+        <div class="content has-text-centered">
+            <img src="./static/images/results.jpg">
+          </div>
+
+          <h3 class="title is-4">Baseline Comparison</h3>
+          <div class="content has-text-justified">
+            <p>
+              We compare our method with 
+              <a target="_blank" rel="noopener noreferrer" href="https://github.com/eladrich/latent-nerf?tab=readme-ov-file#latent-paint-art">Latent-Paint</a> 
+              and <a target="_blank" rel="noopener noreferrer" href="https://github.com/TEXTurePaper/TEXTurePaper?tab=readme-ov-file#3-run-texture-with-personalized-model">TEXTURE</a>.
+            </p>
+          </div>
+          <div class="content has-text-centered">
+            <img src="./static/images/baseline.jpg">
+            </div> -->
+
+          <!-- <h3 class="title is-4">Diversity</h3>
+            <div class="content has-text-justified">
+              <p>
+                Our method can synthesize diverse patterns from the same set of images.
+              </p>
+            </div>
+            <div class="content has-text-centered">
+              <img src="./static/images/diversity.jpg">
+              </div> -->
+
+        <br/>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- <section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{
+}</code></pre>
+  </div>
+</section> -->
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website template is partially borrowed from <a
+            href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>. 
+            Please refer to Nerfies if you want to use this template.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
